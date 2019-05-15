@@ -1,13 +1,14 @@
 import React from 'react';
+import { withAuthorization } from '../Session';
 
-import  { FirebaseContext } from '../Firebase';
-
-const SomeComponent = () => (
-  <FirebaseContext.Consumer>
-    {firebase => {
-      return <div>I've access to Firebase and render something.</div>;
-    }}
-  </FirebaseContext.Consumer>
+const HomePage = () => (
+  <div>
+    <h1>Home Page</h1>
+    <p>The Home Page is accessible by every signed in user.</p>
+  </div>
 );
 
-export default SomeComponent;
+const condition = authUser => !!authUser;
+
+export default withAuthorization(condition)(HomePage);
+
