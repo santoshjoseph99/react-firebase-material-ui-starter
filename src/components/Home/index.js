@@ -28,10 +28,10 @@ class HomePage extends React.Component {
     })
   }
   add = async () => {
-    // this.props.firebase.books().push({title: 'book5', author: 'S.A. Joseph'})
+    const bookNum = Math.random()*1000;
+    this.props.firebase.books().push({title: `book${bookNum}`, author: 'S.A. Joseph'})
   }
   prev = async () => {
-    console.log('prev',this.state, this.state.topKeys[this.state.topKeys.length-1])
     const snapshot = await this.props.firebase.books()
       .orderByChild('title')
       .limitToFirst(this.pageSize+1)
@@ -39,7 +39,6 @@ class HomePage extends React.Component {
       .once('value');
     const values = snapshot.val();
     const keys = Object.keys(values);
-    //console.log('--keys', keys)
     this.setState({
       books: Object.values(values).slice(0, this.pageSize),
       keys: keys.slice(0, this.pageSize),
@@ -48,7 +47,6 @@ class HomePage extends React.Component {
     })
   }
   next = async () => {
-    console.log('next', this.state)
     const snapshot = await this.props.firebase.books()
       .orderByChild('title')
       .limitToFirst(this.pageSize+1)
@@ -60,7 +58,7 @@ class HomePage extends React.Component {
       books: Object.values(values).slice(0, this.pageSize),
       keys: keys.slice(0, this.pageSize),
       startNextKey: keys[this.pageSize] ? values[keys[this.pageSize]].title : '',
-      topKeys: this.state.topKeys.concat(this.state.keys[0])
+      topKeys: this.state.topKeys.concat(this.state.books[0].title)
     })
   }
 
@@ -72,6 +70,9 @@ class HomePage extends React.Component {
       <div>
         <h1>Home Page</h1>
         <p>The Home Page is accessible by every signed in user.</p>
+        <div>
+          <button onClick={this.add}>Add Book</button>
+        </div>
         <ul>
           {books}
         </ul>
