@@ -1,5 +1,15 @@
 import React from 'react';
 import { withAuthorization } from '../Session';
+import { Paper, Typography, Button, List, ListItem, ListItemText } from '@material-ui/core'
+import { withStyles } from '@material-ui/core/styles'
+
+const styles = {
+  root: {
+    margin: 20,
+    padding: 20,
+    maxWidth: 400
+  }
+}
 
 class HomePage extends React.Component {
   constructor(props) {
@@ -7,14 +17,14 @@ class HomePage extends React.Component {
     this.state = {
       books: [],
       keys: [],
-      startNextKey: '',
-      topKeys: [],
+      nextKey: '',
+      prevKeys: [],
     }
     this.pageSize = 2;
   }
   async componentDidMount() {
     const snapshot = await this.props.firebase.books()
-      .orderByChild('title')
+      .orderByKey()
       .limitToFirst(this.pageSize+1)
       .startAt('')
       .once('value');
@@ -23,66 +33,82 @@ class HomePage extends React.Component {
     this.setState({
       books: Object.values(values).slice(0, this.pageSize),
       keys: keys.slice(0, this.pageSize),
-      startNextKey: keys[this.pageSize] ? values[keys[this.pageSize]].title : '',
-      topKeys: []
+      nextKey: keys[this.pageSize],
+      prevKeys: []
     })
   }
   add = async () => {
-    const bookNum = Math.random()*1000;
+    const bookNum = Math.round(Math.random()*1000);
     this.props.firebase.books().push({title: `book${bookNum}`, author: 'S.A. Joseph'})
   }
   prev = async () => {
     const snapshot = await this.props.firebase.books()
-      .orderByChild('title')
+      .orderByKey()
       .limitToFirst(this.pageSize+1)
-      .startAt(this.state.topKeys[this.state.topKeys.length-1])
+      .startAt(this.state.prevKeys[this.state.prevKeys.length-1])
       .once('value');
     const values = snapshot.val();
     const keys = Object.keys(values);
     this.setState({
       books: Object.values(values).slice(0, this.pageSize),
       keys: keys.slice(0, this.pageSize),
-      startNextKey: values[keys[keys.length-1]].title,
-      topKeys: this.state.topKeys.slice(0, this.state.topKeys.length-1)
-    })
+      nextKey: keys[keys.length-1],
+      prevKeys: this.state.prevKeys.slice(0, this.state.prevKeys.length-1)
+    });
   }
   next = async () => {
     const snapshot = await this.props.firebase.books()
-      .orderByChild('title')
+      .orderByKey()
       .limitToFirst(this.pageSize+1)
-      .startAt(this.state.startNextKey)
-      .once('value')
+      .startAt(this.state.nextKey)
+      .once('value');
     const values = snapshot.val();
     const keys = Object.keys(values);
+    const prevKey = this.state.keys[0];
     this.setState({
       books: Object.values(values).slice(0, this.pageSize),
       keys: keys.slice(0, this.pageSize),
-      startNextKey: keys[this.pageSize] ? values[keys[this.pageSize]].title : '',
-      topKeys: this.state.topKeys.concat(this.state.books[0].title)
+      nextKey: keys[this.pageSize],
+      prevKeys: this.state.prevKeys.concat(prevKey)
     })
   }
 
   render() {
+    const {classes} = this.props;
     const books = this.state.books.map((x,i) => {
-      return (<li key={this.state.keys[i]}><span>{x.author}</span> <span>{x.title}</span></li>);
+      return (
+        <ListItem key={this.state.keys[i]}>
+          <ListItemText primary={x.author}/>
+          <ListItemText primary={x.title}/>
+        </ListItem>
+      );
     });
     return (
-      <div>
-        <h1>Home Page</h1>
+      <Paper className={classes.root}>
+        <Typography variant='title' align='center' gutterBottom>
+          Home Page
+        </Typography>
         <p>The Home Page is accessible by every signed in user.</p>
-        <div>
-          <button onClick={this.add}>Add Book</button>
-        </div>
-        <ul>
+        <Button
+          type='submit'
+          color='primary'
+          variant='contained'
+          onClick={this.add}
+        >
+          Add Book
+        </Button>
+        <List>
           {books}
-        </ul>
-        {this.state.topKeys.length > 0 && <button onClick={this.prev}>Prev</button>}
-        {this.state.startNextKey && <button onClick={this.next}>Next</button>}
-      </div>
+        </List>
+        {<PrimaryButton disabled={this.state.prevKeys.length === 0} onClick={this.prev} text="Prev" color='secondary'/>}
+        {<PrimaryButton disabled={!this.state.nextKey} onClick={this.next} text="Next" color='secondary' />}
+      </Paper>
     );
   }
 }
 
+const PrimaryButton = (props) => <Button color='primary' variant='contained' {...props}>{props.text}</Button>
+
 const condition = authUser => !!authUser;
 
-export default withAuthorization(condition)(HomePage);
+export default withStyles(styles)(withAuthorization(condition)(HomePage));
