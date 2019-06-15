@@ -10,6 +10,7 @@ import AccountPage from '../Account';
 import AdminPage from '../Admin';
 import * as ROUTES from '../../constants/routes';
 import { withAuthentication } from '../Session';
+import { connect } from 'react-redux';
 
 const App = () => (
   <Router>
@@ -27,4 +28,4 @@ const App = () => (
   </Router>
 );
 
-export default withAuthentication(App);
+export default connect()(withAuthentication(App));

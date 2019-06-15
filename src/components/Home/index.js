@@ -23,6 +23,7 @@ class HomePage extends React.Component {
     this.pageSize = 2;
   }
   async componentDidMount() {
+    // this.props.store.dispatch({type: 'GET_BOOKS'})
     const snapshot = await this.props.firebase.books()
       .orderByKey()
       .limitToFirst(this.pageSize+1)
@@ -38,8 +39,9 @@ class HomePage extends React.Component {
     })
   }
   add = async () => {
-    const bookNum = Math.round(Math.random()*1000);
-    this.props.firebase.books().push({title: `book${bookNum}`, author: 'S.A. Joseph'})
+    this.props.store.dispatch({type:'GET_BOOKS'})
+    // const bookNum = Math.round(Math.random()*1000);
+    // this.props.firebase.books().push({title: `book${bookNum}`, author: 'S.A. Joseph'})
   }
   prev = async () => {
     const snapshot = await this.props.firebase.books()
